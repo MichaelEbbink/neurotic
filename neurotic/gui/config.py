@@ -92,7 +92,8 @@ class EphyviewerConfigurator():
         }
         self.themes['dark'] = {
             'cmap': 'Accent', # light traces
-            'background_color': 'k', # black
+            # 'background_color': 'k', # black
+            'background_color': '#31363b', # BreezeDark widget background-color
             'vline_color': '#FFFFFFAA', # transparent white
             'label_fill_color': '#222222DD', # transparent dark gray
         }
@@ -309,6 +310,23 @@ class EphyviewerConfigurator():
         font = win.font()
         font.setPointSize(ui_scales[ui_scale]['app_font_size'])
         win.setFont(font)
+
+        #############
+        #############
+        if theme == 'dark':
+            file = ephyviewer.QT.QFile(":/dark.qss")
+            file.open(ephyviewer.QT.QFile.ReadOnly | ephyviewer.QT.QFile.Text)
+            stream = ephyviewer.QT.QTextStream(file)
+            win.setStyleSheet(stream.readAll())
+        # elif theme == 'light':
+        #     file = ephyviewer.QT.QFile(":/light.qss")
+        #     file.open(ephyviewer.QT.QFile.ReadOnly | ephyviewer.QT.QFile.Text)
+        #     stream = ephyviewer.QT.QTextStream(file)
+        #     win.setStyleSheet(stream.readAll())
+        elif theme == 'printer-friendly':
+            win.setStyleSheet('QWidget {background-color: #ffffff;}')
+        #############
+        #############
 
         ########################################################################
         # COLORS

@@ -810,6 +810,14 @@ class EphyviewerConfigurator():
             if isinstance(widget, ephyviewer.PyQt5.QtWidgets.QTabBar):
                 widget.setCurrentIndex(0)
 
+        # remove margins around viewer contents
+        compact = True
+        if compact:
+            for name, v in win.viewers.items():
+                v['widget'].layout().setContentsMargins(0, 0, 0, 0)
+            if 'Video' in win.viewers:
+                video_view.graphiclayout.ci.layout.setContentsMargins(0, 0, 0, 0)
+
         # set amount of time shown initially
         win.set_xsize(self.metadata.get('t_width', 40)) # seconds
 

@@ -21,7 +21,7 @@ from tqdm.auto import tqdm
 
 from urllib.request import HTTPBasicAuthHandler, HTTPPasswordMgrWithDefaultRealm
 from ..datasets.ftpauth import FTPBasicAuthHandler
-from ..datasets.gdrive import gdrive_download
+from ..datasets.gdrive import GoogleDriveDownloader
 
 import logging
 logger = logging.getLogger(__name__)
@@ -35,13 +35,15 @@ _ftp_auth_handler = FTPBasicAuthHandler()
 _opener = urllib.request.build_opener(_http_auth_handler, _ftp_auth_handler)
 urllib.request.install_opener(_opener)
 
+gdrive_downloader = GoogleDriveDownloader()
+
 
 def download(url, local_file, overwrite_existing=False, show_progress=True, bytes_per_chunk=1024*8):
     """
     Download a file.
     """
     if urllib.parse.urlparse(url).scheme == 'gdrive':
-        return gdrive_download(url, local_file, show_progress=show_progress, bytes_per_chunk=1024*1024*5)
+        return gdrive_downloader.download(url, local_file, show_progress=show_progress, bytes_per_chunk=1024*1024*5)
 
     if not overwrite_existing and os.path.exists(local_file):
         logger.info(f'Skipping {os.path.basename(local_file)} (already exists)')

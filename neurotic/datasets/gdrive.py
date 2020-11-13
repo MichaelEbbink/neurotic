@@ -86,6 +86,13 @@ class GoogleDriveDownloader():
             self._service = build('drive', 'v3', credentials=self.creds)
         return self._service
 
+    def reset_creds(self):
+        """
+        TODO ...
+        """
+        self._creds = None
+        self._service = None
+
     def get_user_email(self):
         """
         TODO ...

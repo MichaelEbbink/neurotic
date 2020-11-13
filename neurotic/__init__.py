@@ -69,6 +69,12 @@ logger_streamhandler.setFormatter(StreamLoggingFormatter())
 logger.addHandler(logger_streamhandler)
 
 
+# set the directory for storing Google Drive credentials
+gdrive_creds_dir = os.path.join(os.path.expanduser('~'), '.neurotic', 'gdrive-creds')
+if not os.path.exists(gdrive_creds_dir):
+    os.mkdir(gdrive_creds_dir)
+
+
 from .datasets import *
 from .gui import *
 from .scripts import *

@@ -18,6 +18,8 @@ from googleapiclient.http import MediaIoBaseDownload
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
+from .. import gdrive_creds_dir
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -32,9 +34,8 @@ class GoogleDriveDownloader():
         Initialize a new GoogleDriveDownloader.
         """
 
-        user_dir = os.path.join(os.path.expanduser('~'), '.neurotic')
-        self.credentials_file = credentials_file or os.path.join(user_dir, 'credentials.json')
-        self.token_file = token_file or os.path.join(user_dir, 'gdrive-token.pickle')
+        self.credentials_file = credentials_file or os.path.join(gdrive_creds_dir, 'credentials.json')
+        self.token_file = token_file or os.path.join(gdrive_creds_dir, 'gdrive-token.pickle')
         self.save_token = save_token
 
         self._creds = None

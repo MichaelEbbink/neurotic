@@ -41,12 +41,12 @@ Generating a Client Credentials File
        ``credentials.json``.
     g. Click "Done".
 
-4. Move the downloaded file, ``credentials.json``, into the ``.neurotic``
-   folder in your home folder:
+4. Move the downloaded file, ``credentials.json``, into the
+   ``.neurotic/gdrive-creds`` folder in your home folder:
 
-    - Windows: ``C:\Users\<username>\.neurotic``
-    - macOS: ``/Users/<username>/.neurotic``
-    - Linux: ``/home/<username>/.neurotic``
+    - Windows: ``C:\Users\<username>\.neurotic\gdrive-creds``
+    - macOS: ``/Users/<username>/.neurotic/gdrive-creds``
+    - Linux: ``/home/<username>/.neurotic/gdrive-creds``
 
 .. _gdrive-permissions:
 

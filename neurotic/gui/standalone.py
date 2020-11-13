@@ -337,7 +337,7 @@ class MainWindow(QT.QMainWindow):
         self.statusBar().showMessage('Starting downloads (see console window)',
                                      msecs=5000)
 
-    def on_download_finished(self):
+    def on_download_finished(self, success):
         """
         Cleanup download thread and reload the metadata list content to update
         file indicators.
@@ -347,7 +347,12 @@ class MainWindow(QT.QMainWindow):
         self.metadata_selector.load()
         self.do_download_data.setText('&Download data')
         self.do_download_data.setEnabled(True)
-        self.statusBar().showMessage('Downloads complete', msecs=5000)
+
+        if success:
+            self.statusBar().showMessage('Downloads complete', msecs=5000)
+        else:
+            self.statusBar().showMessage('ERROR: Download failed (see console '
+                                         'for details)', msecs=5000)
 
     def open_directory(self):
         """
@@ -688,7 +693,7 @@ class _DownloadWorker(QT.QObject):
     A thread worker for downloading data files.
     """
 
-    download_finished = QT.pyqtSignal()
+    download_finished = QT.pyqtSignal(bool)
 
     def __init__(self, mainwindow):
         """
@@ -704,8 +709,14 @@ class _DownloadWorker(QT.QObject):
         Download all files and emit a signal when complete.
         """
 
-        self.mainwindow.metadata_selector.download_all_data_files()
-        self.download_finished.emit()
+        success = False
+        try:
+            self.mainwindow.metadata_selector.download_all_data_files()
+            success = True
+        except:
+            pass
+        finally:
+            self.download_finished.emit(success)
 
 
 class _LoadDatasetWorker(QT.QObject):

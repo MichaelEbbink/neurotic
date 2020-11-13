@@ -114,16 +114,16 @@ class GoogleDriveDownloader():
             if error_code == 404:
                 # not found
                 logger.error(f'Skipping {os.path.basename(local_file)} (not found on server for account "{self.get_user_email()}")')
-                return
+                raise  # TODO: raise errors in download.py also?
 
             else:
                 logger.error(f'Skipping {os.path.basename(local_file)} ({e})')
-                return
+                raise  # TODO: raise errors in download.py also?
 
         except Exception as e:
 
             logger.error(f'Skipping {os.path.basename(local_file)} ({e})')
-            return
+            raise  # TODO: raise errors in download.py also?
 
     def _download_with_progress_bar(self, gdrive_url, local_file, show_progress=True, bytes_per_chunk=1024*1024*5):
         """

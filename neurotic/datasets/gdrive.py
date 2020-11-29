@@ -7,6 +7,7 @@ The :mod:`neurotic.datasets.gdrive` module implements ... TODO
 """
 
 import os
+import shutil
 import json
 import pickle
 import urllib
@@ -145,6 +146,10 @@ class GoogleDriveDownloader():
         # ideal for progress reporting and yet still noticeably slows downloads. Is
         # there a better solution?
 
+        # determine where to temporarily save the file during download
+        temp_file = local_file + '.part'
+        logger.debug(f'Temporarily downloading to {temp_file}')
+
         # create the containing directory if necessary
         if not os.path.exists(os.path.dirname(local_file)):
             os.makedirs(os.path.dirname(local_file))
@@ -157,17 +162,30 @@ class GoogleDriveDownloader():
             fileId=file_id, supportsAllDrives=True,
             fields='size').execute().get('size', 0))
 
-        request = self.service.files().get_media(fileId=file_id)
-        with open(local_file, 'wb') as f:
-            downloader = MediaIoBaseDownload(f, request, chunksize=bytes_per_chunk)
-            with tqdm(total=file_size_in_bytes, unit='B', unit_scale=True) as pbar:
-                done = False
-                while done is False:
-                    status, done = downloader.next_chunk()
+        try:
+            with open(temp_file, 'wb') as f:
+                request = self.service.files().get_media(fileId=file_id)
+                downloader = MediaIoBaseDownload(f, request, chunksize=bytes_per_chunk)
+                with tqdm(total=file_size_in_bytes, unit='B', unit_scale=True) as pbar:
+                    done = False
+                    while done is False:
+                        status, done = downloader.next_chunk()
 
-                    # set progress to the exact number of bytes downloaded so far
-                    pbar.n = status.resumable_progress
-                    pbar.update()
+                        # set progress to the exact number of bytes downloaded so far
+                        pbar.n = status.resumable_progress
+                        pbar.update()
+
+        except:
+            # the download is likely incomplete, so delete the temporary file
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+
+            # raise the exception so that it can be handled elsewhere
+            raise
+
+        else:
+            # download completed, so move the temp file to the final location
+            shutil.move(temp_file, local_file)
 
     def _get_file_id(self, gdrive_url):
         """

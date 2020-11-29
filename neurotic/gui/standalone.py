@@ -18,7 +18,7 @@ import quantities as pq
 import neo
 from ephyviewer import QT, QT_MODE
 
-from .. import __version__, _elephant_tools, default_log_level, log_file
+from .. import __version__, _elephant_tools, default_log_level, log_file, gdrive_creds_dir, gdrive_downloader
 from ..datasets import MetadataSelector, load_dataset
 from ..datasets.metadata import _selector_labels
 from ..gui.config import EphyviewerConfigurator, available_themes, available_ui_scales
@@ -267,6 +267,14 @@ class MainWindow(QT.QMainWindow):
 
         help_menu.addSeparator()
 
+        do_open_gdrive_creds_dir = help_menu.addAction('Open Google Drive credentials directory')
+        do_open_gdrive_creds_dir.triggered.connect(self.open_gdrive_creds_dir)
+
+        do_purge_gdrive_tokens = help_menu.addAction('Purge Google Drive login tokens')
+        do_purge_gdrive_tokens.triggered.connect(self.purge_gdrive_tokens)
+
+        help_menu.addSeparator()
+
         do_show_check_for_updates = help_menu.addAction('Check for updates')
         do_show_check_for_updates.triggered.connect(self.show_check_for_updates)
 
@@ -323,7 +331,6 @@ class MainWindow(QT.QMainWindow):
             logger.error(f'The metadata file was not found: {e}')
             self.statusBar().showMessage('ERROR: The metadata file could not '
                                          'be found', msecs=5000)
-            return
 
     def download_files(self):
         """
@@ -337,7 +344,7 @@ class MainWindow(QT.QMainWindow):
         self.statusBar().showMessage('Starting downloads (see console window)',
                                      msecs=5000)
 
-    def on_download_finished(self):
+    def on_download_finished(self, success):
         """
         Cleanup download thread and reload the metadata list content to update
         file indicators.
@@ -347,7 +354,12 @@ class MainWindow(QT.QMainWindow):
         self.metadata_selector.load()
         self.do_download_data.setText('&Download data')
         self.do_download_data.setEnabled(True)
-        self.statusBar().showMessage('Downloads complete', msecs=5000)
+
+        if success:
+            self.statusBar().showMessage('Downloads complete', msecs=5000)
+        else:
+            self.statusBar().showMessage('ERROR: Download failed (see console '
+                                         'for details)', msecs=5000)
 
     def open_directory(self):
         """
@@ -455,7 +467,42 @@ class MainWindow(QT.QMainWindow):
             logger.error(f'The log file was not found: {e}')
             self.statusBar().showMessage('ERROR: The log file could not be '
                                          'found', msecs=5000)
-            return
+
+    def open_gdrive_creds_dir(self):
+        """
+        TODO
+        """
+
+        try:
+            open_path_with_default_program(gdrive_creds_dir)
+        except FileNotFoundError as e:
+            logger.error(f'Could not open Google Drive credentials directory: '
+                         f'{e}')
+            self.statusBar().showMessage('ERROR: Could not open Google Drive '
+                                         'credentials directory', msecs=5000)
+
+    def purge_gdrive_tokens(self):
+        """
+        TODO
+        """
+
+        token_file = os.path.join(gdrive_creds_dir, 'gdrive-token.pickle')
+
+        try:
+            # delete the pickled token file
+            os.remove(token_file)
+
+            # forget token if it was previously loaded
+            gdrive_downloader.reset_creds()
+
+            logger.info(f'Google Drive token file deleted: {token_file}')
+            self.statusBar().showMessage('Google Drive token file deleted',
+                                         msecs=5000)
+        except FileNotFoundError as e:
+            logger.info(f'Google Drive token file not deleted (did not '
+                        f'exist): {token_file}')
+            self.statusBar().showMessage('Google Drive token file does not '
+                                         'exist', msecs=5000)
 
     def show_check_for_updates(self):
         """
@@ -556,6 +603,8 @@ class MainWindow(QT.QMainWindow):
         </table>
 
         <p>Install path: <code>{os.path.dirname(os.path.dirname(__file__))}</code></p>
+
+        <p>Google Drive credentials directory: <code>{gdrive_creds_dir}</code></p>
         """
 
         QT.QMessageBox.about(self, title, text)
@@ -688,7 +737,7 @@ class _DownloadWorker(QT.QObject):
     A thread worker for downloading data files.
     """
 
-    download_finished = QT.pyqtSignal()
+    download_finished = QT.pyqtSignal(bool)
 
     def __init__(self, mainwindow):
         """
@@ -704,8 +753,14 @@ class _DownloadWorker(QT.QObject):
         Download all files and emit a signal when complete.
         """
 
-        self.mainwindow.metadata_selector.download_all_data_files()
-        self.download_finished.emit()
+        success = False
+        try:
+            self.mainwindow.metadata_selector.download_all_data_files()
+            success = True
+        except:
+            pass
+        finally:
+            self.download_finished.emit(success)
 
 
 class _LoadDatasetWorker(QT.QObject):
